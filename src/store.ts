@@ -1,6 +1,8 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 import { getRawTranslationUnits } from '@/helpers/getRawTranslationUnits';
+import axios from 'axios';
+import * as Api from './constants/api';
 
 Vue.use(Vuex);
 
@@ -74,4 +76,13 @@ export default new Vuex.Store({
       }));
     },
   },
+  actions: {
+    generateXliff({ commit, state }) {
+      axios.post(Api.API_XLIFFS, {
+        data: state.activeFile
+      }).then(resp => {
+        console.log(resp);
+      });
+    }
+  }
 });
