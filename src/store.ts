@@ -1,5 +1,6 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
+import { getRawTranslationUnits } from '@/helpers/getRawTranslationUnits';
 
 Vue.use(Vuex);
 
@@ -8,6 +9,8 @@ export default new Vuex.Store({
     files: [],
     activeFile: null,
     activeTranslationUnit: null,
+    newTranslationUnits: [],
+    editedTranslationUnits: []
   },
   mutations: {
     saveFiles(state, { files }) {
@@ -23,22 +26,44 @@ export default new Vuex.Store({
       state.activeTranslationUnit = null;
     },
     updateActiveTranslationUnit(state, { translationUnit }) {
-      const rawUnit = state.getters.rawTranslationUnits.find(unit => unit.$.id === translationUnit.id);
-      rawUnit.source[0] = translationUnit.source;
-      rawUnit.source[0] = translationUnit.source;
-      rawUnit.source[0] = translationUnit.source;
-      rawUnit.source[0] = translationUnit.source;
+      state.activeTranslationUnit.$.id = translationUnit.id.trim();
+      state.activeTranslationUnit.source[0] = translationUnit.source.trim();
+      state.activeTranslationUnit.target[0] = translationUnit.target.trim();
+      state.activeTranslationUnit.note[0]._ = translationUnit.note.trim();
+
+      state.editedTranslationUnits.push(state.activeTranslationUnit.$.id);
     },
+    deleteActiveTranslationUnit(state) {
+      const rawTranslationUnits = getRawTranslationUnits(state.activeFile);
+      const unitIdx = rawTranslationUnits.indexOf(state.activeTranslationUnit);
+      rawTranslationUnits.splice(unitIdx, 1);
+    },
+    addTranslationUnit(state, { translationUnit }) {
+      const rawTranslationUnits = getRawTranslationUnits(state.activeFile);
+      
+      const newUnit = { $: {
+        id: translationUnit.id
+      }, source: [
+        translationUnit.source
+      ], target: [
+        translationUnit.target
+      ], note: [
+        {
+          _: translationUnit.note
+        }
+      ]};
+
+      rawTranslationUnits.push(newUnit);
+      state.newTranslationUnits.push(newUnit.$.id);
+    }
   },
   getters: {
-
     rawTranslationUnits: (state: any) => {
-      const xliff = state.activeFile.xliff;
-      const file = xliff.file[0];
-      const body = file.body[0];
-      const rawTranslationUnits = body['trans-unit'];
+      if (!state.files.length) {
+        return;
+      }
 
-      return rawTranslationUnits;
+      return getRawTranslationUnits(state.activeFile);
     },
     translationUnits: (state: any) => {
       return state.getters.rawTranslationUnits.map((unit) => ({

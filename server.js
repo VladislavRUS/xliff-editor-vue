@@ -53,10 +53,8 @@ app.post('/api/xliffs', (req, res) => {
 });
 
 app.post('/api/upload', (req, res) => {
-    console.log(req);
   (async () => {
     const result = await parseString(req.files.file.data.toString());
-    
     res.send(result);
   })();
 });
