@@ -1,173 +1,183 @@
 <template>
-<div class="ui padded container segment">
-  
-  <div class="ui segment">
-    <h2 class="ui header">
-      <i class="settings icon"></i>
-      <div class="content">
-        XLIFF Editor
-        <div class="sub header">Manage your translations</div>
-      </div>
-    </h2>
+<div>
+  <div class="_overlay" v-if="isGenerating">
+    <div class="ui active inverted dimmer">
+      <div class="ui indeterminate text loader">Generating</div>
+    </div>
+    <p></p>
   </div>
-
-  <div class="ui grid left">
-    <div class="three wide column">
-      <div class="ui fluid vertical menu" id="sticky">
-
-        <a class="item" 
-          :key="file.uuid"
-          v-for="file in files"
-          @click="setActiveFile(file)"
-          v-bind:class="{'active': isActiveFile(file), 'teal': isActiveFile(file)}">
-          {{file.name}}
-          <div class="ui label" 
-            v-bind:class="{'teal': isActiveFile(file), 'left': isActiveFile(file), 'pointing': isActiveFile(file)}">
-            {{getFileTranslationsUnits(file).length}}
-          </div>
-        </a>
-
-        <div class="item">
-          <div class="ui fluid icon input transparent">
-            <input type="text" placeholder="Search..." v-model="searchStr">
-            <i class="search icon"></i>
-          </div>
+  <div class="ui padded container segment">
+    
+    <div class="ui segment">
+      <h2 class="ui header">
+        <i class="settings icon"></i>
+        <div class="content">
+          XLIFF Editor
+          <div class="sub header">Manage your translations</div>
         </div>
-
-        <div class="item">
-          <div class="ui fluid buttons">
-            <button class="ui primary button" @click="generateXliff()">Generate XLIFF</button>
-          </div>
-        </div>
-
-        <div class="item">
-          <div class="ui fluid buttons">
-            <button class="ui positive button" @click="onAdd()">Add unit</button>
-          </div>
-        </div>
-
-        <div class="item" v-if="activeTranslationUnit !== null">
-          <div class="ui fluid buttons">
-            <button class="ui teal button" @click="editSave()">Save</button>
-            <button class="ui button" @click="editCancel()">Cancel</button>
-          </div>
-        </div>
-        <div class="item" v-if="activeTranslationUnit !== null">
-          <div class="ui fluid buttons">
-            <button class="ui negative button" @click="editDelete()">Delete</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  <div class="thirteen wide column" id="stickyContext">
-    <div class="ui error message" v-if="showErrorMessage">
-        <i class="close icon" @click="showErrorMessage = false"></i>
-        <div class="header">
-          Translation unit is incorrect:
-        </div>
-        <ul class="list">
-          <li>These fields should be filled: <strong>source</strong> and <strong>target</strong></li>
-          <li>Translation unit with the same id already exists</li>
-        </ul>
-      </div>
-
-    <div class="ui container segment" v-if="isAdding">
-        <div class="ui form">
-          <div class="field">
-            <label>ID</label>
-            <input type="text" name="id" placeholder="Enter id" v-model="editUnit.id">
-          </div>
-          <div class="field">
-            <label>Source</label>
-            <input type="text" name="source" placeholder="Enter source" v-model="editUnit.source">
-          </div>
-          <div class="field">
-            <label>Target</label>
-            <input type="text" name="target" placeholder="Enter target" v-model="editUnit.target">
-          </div>
-          <div class="field">
-            <label>Note</label>
-            <input type="text" name="note" placeholder="Enter note" v-model="editUnit.note">
-          </div>
-          <button class="ui positive button" @click="addSave()">Save</button>
-          <button class="ui button" @click="addCancel()">Cancel</button>
-      </div>
+      </h2>
     </div>
 
-     <table class="ui fixed single line selectable compact table">
-        <thead>
-          <tr>
-            <th colspan="4">
-              <div class="ui right floated pagination menu">
-                <a class="icon item">
-                  <i class="left chevron icon"></i>
-                </a>
-                <a class="item" 
-                  v-for="page of pages" 
-                  :key="page" @click="setActivePage(page)" 
-                  v-bind:class="{'active': page === currentPage}">
-                  {{page + 1}}
-                </a>
-                <a class="icon item">
-                  <i class="right chevron icon"></i>
-                </a>
-              </div>
-            </th>
-          </tr>
-          <tr>
-            <th>ID</th>
-            <th>Source</th>
-            <th>Target</th>
-            <th>Notes</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr class="top aligned pointer" 
-            v-for="translationUnit in translationUnits" :key="translationUnit.id" 
-            @click="setActiveTranslationUnit(translationUnit)">
-            <template v-if="!isActiveTranslationUnit(translationUnit)">
-              <td>
-                <div class="ui ribbon label teal" v-if="isUnitNew(translationUnit)">New</div>
-                <div class="ui ribbon label orange" v-if="isUnitEdited(translationUnit)">Edited</div>
-                {{translationUnit.$.id}}
-              </td>
-              <td>{{translationUnit.source[0]}}</td>
-              <td>{{translationUnit.target[0]}}</td>
-              <td>{{translationUnit.note[0]._}}</td>
-            </template>
-            <template v-if="isActiveTranslationUnit(translationUnit)">
-              <td>
-                <div class="ui form">
-                  <div class="ield">
-                    <textarea type="text" rows="3" v-model="editUnit.id"></textarea>
-                  </div>
+    <div class="ui grid left">
+      <div class="four wide column">
+        <div class="ui fluid vertical menu" id="sticky">
+
+          <a class="item" 
+            :key="file.uuid"
+            v-for="file in files"
+            @click="setActiveFile(file)"
+            v-bind:class="{'active': isActiveFile(file), 'teal': isActiveFile(file)}">
+            {{file.name}}
+            <div class="ui label" 
+              v-bind:class="{'teal': isActiveFile(file), 'left': isActiveFile(file), 'pointing': isActiveFile(file)}">
+              {{getFileTranslationsUnits(file).length}}
+            </div>
+          </a>
+
+          <div class="item">
+            <div class="ui fluid icon input transparent">
+              <input type="text" placeholder="Search..." v-model="searchStr">
+              <i class="search icon"></i>
+            </div>
+          </div>
+
+          <div class="item">
+            <div class="ui fluid buttons">
+              <button class="ui primary button" @click="generateXliff()">XLIFF</button>
+              <div class="or"></div>
+              <button class="ui primary button" @click="generateJson()">JSON</button>
+            </div>
+          </div>
+
+          <div class="item">
+            <div class="ui fluid buttons">
+              <button class="ui positive button" @click="onAdd()">Add unit</button>
+            </div>
+          </div>
+
+          <div class="item" v-if="activeTranslationUnit !== null">
+            <div class="ui fluid buttons">
+              <button class="ui teal button" @click="editSave()">Save</button>
+              <button class="ui button" @click="editCancel()">Cancel</button>
+            </div>
+          </div>
+          <div class="item" v-if="activeTranslationUnit !== null">
+            <div class="ui fluid buttons">
+              <button class="ui negative button" @click="editDelete()">Delete</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    <div class="twelve wide column" id="stickyContext">
+      <div class="ui error message" v-if="showErrorMessage">
+          <i class="close icon" @click="showErrorMessage = false"></i>
+          <div class="header">
+            Translation unit is incorrect:
+          </div>
+          <ul class="list">
+            <li>These fields should be filled: <strong>source</strong> and <strong>target</strong></li>
+            <li>Translation unit with the same id already exists</li>
+          </ul>
+        </div>
+
+      <div class="ui container segment" v-if="isAdding">
+          <div class="ui form">
+            <div class="field">
+              <label>ID</label>
+              <input type="text" name="id" placeholder="Enter id" v-model="editUnit.id">
+            </div>
+            <div class="field">
+              <label>Source</label>
+              <input type="text" name="source" placeholder="Enter source" v-model="editUnit.source">
+            </div>
+            <div class="field">
+              <label>Target</label>
+              <input type="text" name="target" placeholder="Enter target" v-model="editUnit.target">
+            </div>
+            <div class="field">
+              <label>Note</label>
+              <input type="text" name="note" placeholder="Enter note" v-model="editUnit.note">
+            </div>
+            <button class="ui positive button" @click="addSave()">Save</button>
+            <button class="ui button" @click="addCancel()">Cancel</button>
+        </div>
+      </div>
+
+      <table class="ui fixed single line selectable compact table">
+          <thead>
+            <tr>
+              <th colspan="4">
+                <div class="ui right floated pagination menu">
+                  <a class="icon item">
+                    <i class="left chevron icon"></i>
+                  </a>
+                  <a class="item" 
+                    v-for="page of pages" 
+                    :key="page" @click="setActivePage(page)" 
+                    v-bind:class="{'active': page === currentPage}">
+                    {{page + 1}}
+                  </a>
+                  <a class="icon item">
+                    <i class="right chevron icon"></i>
+                  </a>
                 </div>
-              </td>
-              <td>
-                <div class="ui form">
-                  <div class="field">
-                    <textarea type="text" rows="3" v-model="editUnit.source"></textarea>
+              </th>
+            </tr>
+            <tr>
+              <th>ID</th>
+              <th>Source</th>
+              <th>Target</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="top aligned pointer" 
+              v-for="translationUnit in translationUnits" :key="translationUnit.id" 
+              @click="setActiveTranslationUnit(translationUnit)">
+              <template v-if="!isActiveTranslationUnit(translationUnit)">
+                <td>
+                  <div class="ui ribbon label teal" v-if="isUnitNew(translationUnit)">New</div>
+                  <div class="ui ribbon label orange" v-if="isUnitEdited(translationUnit)">Edited</div>
+                  {{translationUnit.$.id}}
+                </td>
+                <td>{{translationUnit.source[0]}}</td>
+                <td>{{translationUnit.target[0]}}</td>
+                <td>{{translationUnit.note[0]._}}</td>
+              </template>
+              <template v-if="isActiveTranslationUnit(translationUnit)">
+                <td>
+                  <div class="ui form">
+                    <div class="ield">
+                      <textarea type="text" rows="3" v-model="editUnit.id"></textarea>
+                    </div>
                   </div>
-                </div>
-              </td>
-              <td>
-                <div class="ui form">
-                  <div class="field">
-                    <textarea type="text" rows="3" v-model="editUnit.target"></textarea>
+                </td>
+                <td>
+                  <div class="ui form">
+                    <div class="field">
+                      <textarea type="text" rows="3" v-model="editUnit.source"></textarea>
+                    </div>
                   </div>
-                </div>
-              </td>
-              <td>
-                <div class="ui form">
-                  <div class="field">
-                    <textarea type="text" rows="3" v-model="editUnit.note"></textarea>
+                </td>
+                <td>
+                  <div class="ui form">
+                    <div class="field">
+                      <textarea type="text" rows="3" v-model="editUnit.target"></textarea>
+                    </div>
                   </div>
-                </div>
-              </td>
-            </template>
-          </tr>
-        </tbody>
-      </table>
+                </td>
+                <td>
+                  <div class="ui form">
+                    <div class="field">
+                      <textarea type="text" rows="3" v-model="editUnit.note"></textarea>
+                    </div>
+                  </div>
+                </td>
+              </template>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>
@@ -207,6 +217,10 @@ export default class Editor extends Vue {
     }
   }
 
+  get isGenerating() {
+    return this.$store.state.isGenerating;
+  }
+
   get files() {
     return this.$store.state.files;
   }
@@ -221,6 +235,10 @@ export default class Editor extends Vue {
 
   get translationUnits() {
     let translationUnits = this.$store.getters.rawTranslationUnits;
+
+    if (!translationUnits) {
+      return;
+    }
 
     if (this.searchStr) {
       const lowerSearchStr = this.searchStr.toLowerCase();
@@ -374,6 +392,10 @@ export default class Editor extends Vue {
 
   private generateXliff() {
     this.$store.dispatch('generateXliff');
+  }
+
+  private generateJson() {
+    this.$store.dispatch('generateJson');
   }
 }
 </script>

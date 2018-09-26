@@ -13,7 +13,8 @@ export default new Vuex.Store({
     activeFile: null,
     activeTranslationUnit: null,
     newTranslationUnits: [],
-    editedTranslationUnits: []
+    editedTranslationUnits: [],
+    isGenerating: false
   },
   mutations: {
     saveFiles(state, { files }) {
@@ -79,6 +80,8 @@ export default new Vuex.Store({
   },
   actions: {
     generateXliff({ commit, state }) {
+      state.isGenerating = true;
+
       axios.post(Api.API_XLIFFS, {
         xliff: state.activeFile.xliff
       }, {
@@ -88,7 +91,25 @@ export default new Vuex.Store({
       }).then(resp => {
         const blob = new Blob([resp.data]);
         FileSaver(blob, state.activeFile.name);
+        state.isGenerating = false;
       });
-    }
+    },
+    generateJson({ commit, state}) {
+      const rawTranslationUnits = getRawTranslationUnits(state.activeFile);
+      const jsonUnits = {};
+
+      rawTranslationUnits.forEach(unit => {
+        const id = unit.$.id;
+        const target = unit.target[0];
+
+        jsonUnits[id] = target;
+      });
+
+      const fileName = state.activeFile.name;
+      const dotIdx = fileName.lastIndexOf('.');
+      const name = fileName.substring(0, dotIdx) + '.json';
+      const blob = new Blob([JSON.stringify(jsonUnits)]);
+      FileSaver(blob, name);
+    },
   }
 });
