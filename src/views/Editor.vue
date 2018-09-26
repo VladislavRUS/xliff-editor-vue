@@ -36,7 +36,7 @@
 
         <div class="item">
           <div class="ui fluid buttons">
-            <button class="ui primary button">Generate XLIFF</button>
+            <button class="ui primary button" @click="generateXliff()">Generate XLIFF</button>
           </div>
         </div>
 
@@ -370,6 +370,10 @@ export default class Editor extends Vue {
   private addCancel() {
     this.setEmptyEditUnit();
     this.isAdding = false;
+  }
+
+  private generateXliff() {
+    this.$store.dispatch('generateXliff');
   }
 }
 </script>

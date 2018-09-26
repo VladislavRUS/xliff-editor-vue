@@ -3,6 +3,7 @@ import Vuex from 'vuex';
 import { getRawTranslationUnits } from '@/helpers/getRawTranslationUnits';
 import axios from 'axios';
 import * as Api from './constants/api';
+import FileSaver from "file-saver"
 
 Vue.use(Vuex);
 
@@ -79,9 +80,14 @@ export default new Vuex.Store({
   actions: {
     generateXliff({ commit, state }) {
       axios.post(Api.API_XLIFFS, {
-        data: state.activeFile
+        xliff: state.activeFile.xliff
+      }, {
+        headers: {
+          'Accept': 'application/xml'
+        }
       }).then(resp => {
-        console.log(resp);
+        const blob = new Blob([resp.data]);
+        FileSaver(blob, state.activeFile.name);
       });
     }
   }
